@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PANG2 STORE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #000;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .product-list,
+        .product-detail,
+        .checkout,
+        .payment-method {
+            display: none;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .product-list.active,
+        .product-detail.active,
+        .checkout.active,
+        .payment-method.active {
+            display: block;
+        }
+
+        .product-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            background: white;
+        }
+
+        .product-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .product-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: #ff6b00;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #e05d00;
+        }
+
+        .btn-secondary {
+            background: #666;
+            margin-right: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #555;
+        }
+
+        .product-detail-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .product-images {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .product-info {
+            flex: 2;
+            min-width: 300px;
+        }
+
+        .product-detail img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #d82c2c;
+            margin: 10px 0;
+        }
+
+        .discount {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #777;
+            margin-right: 10px;
+        }
+
+        .loading {
+            display: none;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #ff6b00;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .package-options {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+
+        .package-option {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .package-option:hover {
+            border-color: #ff6b00;
+        }
+
+        .package-option.selected {
+            border-color: #ff6b00;
+            background-color: #fff8f0;
+        }
+
+        .package-option input {
+            margin-right: 10px;
+        }
+
+        /* Form styles */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .form-group textarea {
+            height: 100px;
+        }
+
+        .order-summary {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .error {
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        /* Payment Method Styles */
+        .payment-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-option:hover {
+            border-color: #ff6b00;
+        }
+
+        .payment-option.selected {
+            border-color: #ff6b00;
+            background-color: #fff8f0;
+        }
+
+        .payment-option img {
+            width: 40px;
+            margin-right: 15px;
+        }
+
+        /* Modal Sukses */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .success-icon {
+            color: #28a745;
+            font-size: 50px;
+            margin-bottom: 20px;
+        }
+
+        .bank-details {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        @media (max-width: 768px) {
+            .product-detail-content {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .product-item {
+                text-align: center;
+            }
+
+            .payment-option {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .payment-option img {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>PANG2 STORE</h1>
+        <p>Official Online Store</p>
+    </header>
+    <div class="container">
+        <div class="product-list active" id="productList">
+            <h2>Daftar Produk Sony</h2>
+            <div class="product-grid" id="productGrid">
+            </div>
+        </div>
+        <div class="product-detail" id="productDetail">
+            <div class="product-detail-content">
+                <div class="product-images">
+                    <img id="detailImage" src="" alt="Produk Sony">
+                </div>
+                <div class="product-info">
+                    <h2 id="detailTitle">Detail Produk</h2>
+                    <p><strong>Kategori:</strong> <span id="detailCategory"></span></p>
+                    <p><strong>Deskripsi:</strong> <span id="detailDesc"></span></p>
+                    <div class="price-container">
+                        <span class="price" id="detailPrice"></span>
+                        <span class="original-price" id="detailOriginalPrice"></span>
+                    </div>
+                    <p><strong>Garansi:</strong> 2 Tahun Resmi Sony Indonesia</p>
+
+                    <div class="package-options" id="packageOptions">
+                        <h3>Pilih Paket:</h3>
+                    </div>
+
+                    <button class="btn btn-secondary" onclick="goBackToList()">Kembali</button>
+                    <button class="btn" onclick="showCheckout()">Beli Sekarang</button>
+                </div>
+            </div>
+        </div>
+        <div class="checkout" id="checkout">
+            <h2>Formulir Pembelian</h2>
+            <form id="orderForm">
+                <div class="form-group">
+                    <label for="name">Nama Lengkap:</label>
+                    <input type="text" id="name" required>
+                    <div class="error" id="name-error">Harap isi nama lengkap</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Alamat Lengkap:</label>
+                    <textarea id="address" required></textarea>
+                    <div class="error" id="address-error">Harap isi alamat lengkap</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" required>
+                    <div class="error" id="email-error">Harap isi email yang valid</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">No. WhatsApp:</label>
+                    <input type="tel" id="phone" required>
+                    <div class="error" id="phone-error">Harap isi nomor yang valid (10-13 digit)</div>
+                </div>
+
+                <div class="order-summary">
+                    <h3>Ringkasan Pesanan</h3>
+                    <p><strong>Produk:</strong> <span id="checkoutProduct"></span></p>
+                    <p><strong>Harga Produk:</strong> <span id="checkoutPrice"></span></p>
+                    <p><strong>Proteksi:</strong> <span id="checkoutProtection"></span></p>
+                    <p><strong>Diskon:</strong> <span id="checkoutDiscount"></span></p>
+                    <p><strong>Total:</strong> <span class="price" id="checkoutTotal"></span></p>
+                </div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Memproses pesanan...</p>
+                </div>
+
+                <button type="button" class="btn btn-secondary" onclick="goBackToDetail()">Kembali</button>
+                <button type="submit" class="btn" id="submitOrder">Konfirmasi Pesanan</button>
+            </form>
+        </div>
+        <div class="payment-method" id="paymentMethod">
+            <h2>Metode Pembayaran</h2>
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label>Pilih Metode Pembayaran:</label>
+
+                    <div class="payment-option selected" data-payment-type="transfer">
+                        <img src="https://cdn-icons-png.flaticon.com/512/2489/2489076.png" alt="Transfer Bank">
+                        <div>
+                            <h3>Transfer Bank</h3>
+                            <p>Transfer ke rekening kami</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="bankTransferForm">
+                    <div class="form-group">
+                        <label for="bankName">Nama Bank:</label>
+                        <select id="bankName" required>
+                            <option value="">Pilih Bank</option>
+                            <option value="BCA">BCA</option>
+                            <option value="Mandiri">Mandiri</option>
+                            <option value="BNI">BNI</option>
+                            <option value="BRI">BRI</option>
+                        </select>
+                        <div class="error" id="bankName-error">Harap pilih nama bank</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="accountNumber">Nomor Rekening:</label>
+                        <input type="text" id="accountNumber" required>
+                        <div class="error" id="accountNumber-error">Harap isi nomor rekening</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="accountName">Nama Pemilik Rekening:</label>
+                        <input type="text" id="accountName" required>
+                        <div class="error" id="accountName-error">Harap isi nama pemilik rekening</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="transferAmount">Jumlah Transfer:</label>
+                        <input type="text" id="transferAmount" readonly>
+                    </div>
+                </div>
+                <div class="loading" id="paymentLoading">
+                    <div class="spinner"></div>
+                    <p>Memproses pembayaran...</p>
+                </div>
+
+                <button type="button" class="btn btn-secondary" onclick="goBackToCheckout()">Kembali</button>
+                <button type="submit" class="btn" id="submitPayment">Konfirmasi Pembayaran</button>
+            </form>
+        </div>
+    </div>
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-content">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>Pembelian Berhasil!</h2>
+            <div class="bank-details" id="successBankDetails">
+            </div>
+            <p>Terima kasih telah berbelanja di PANG2 STORE</p>
+            <button class="btn" onclick="closeSuccessModal()">Tutup</button>
+        </div>
+    </div>
+    <script>
+        // Data produk Sony (18 produk)
+        const products = [
+            {
+                id: 'A7CII',
+                name: 'Sony Alpha A7C II',
+                category: 'Kamera Mirrorless',
+                image: 'https://i.pinimg.com/736x/60/cd/20/60cd20b131065d654cdcbc74e8bdeddb.jpg',
+                desc: 'Kamera mirrorless full-frame kompak dengan sensor 33MP, autofokus canggih, dan stabilisasi gambar 5-axis.',
+                priceBody: 27537020,
+                priceComplete: 29200000,
+                originalPrice: 29999000
+            },
+            {
+                id: 'ZV-E1',
+                name: 'Sony ZV-E1',
+                category: 'Kamera Vlogging',
+                image: 'https://i.pinimg.com/736x/80/fb/5b/80fb5b75773c40b498d81498c6cf1437.jpg',
+                desc: 'Kamera mirrorless full-frame untuk content creator dengan sensor 12MP, AI autofokus, dan fitur video 4K 120fps.',
+                priceBody: 31999000,
+                priceComplete: 33999000,
+                originalPrice: 34999000
+            },
+            {
+                id: 'A7IV',
+                name: 'Sony Alpha A7 IV',
+                category: 'Kamera Mirrorless',
+                image: 'https://i.pinimg.com/736x/b3/ef/e5/b3efe5f7d49b17d46e8fd8c33a489d18.jpg',
+                desc: 'Kamera mirrorless full-frame dengan sensor 33MP, 4K 60p, dan autofokus real-time yang canggih.',
+                priceBody: 32990000, // Perbaikan harga, sepertinya typo 3299000 sebelumnya
+                priceComplete: 36999000,
+                originalPrice: 37999000
+            },
+            {
+                id: 'A7R5',
+                name: 'Sony Alpha A7R V',
+                category: 'Kamera Profesional',
+                image: 'https://i.pinimg.com/736x/5b/65/55/5b655571e9721c123534956ed57d6f10.jpg',
+                desc: 'Kamera mirrorless resolusi tinggi 61MP dengan prosesor gambar terbaru dan stabilisasi 8-stop.',
+                priceBody: 49999000,
+                priceComplete: 54999000,
+                originalPrice: 56999000
+            },
+            {
+                id: 'A9III',
+                name: 'Sony Alpha A9 III',
+                category: 'Kamera Profesional',
+                image: 'https://i.pinimg.com/736x/38/e0/05/38e005fe5f4cd2ca5bda7051675857ec.jpg',
+                desc: 'Kamera mirrorless dengan shutter global 120fps, ideal untuk fotografi olahraga dan aksi.',
+                priceBody: 69999000,
+                priceComplete: 74999000,
+                originalPrice: 76999000
+            },
+            {
+                id: 'FX3',
+                name: 'Sony FX3',
+                category: 'Kamera Cinema',
+                image: 'https://i.pinimg.com/736x/b7/e9/77/b7e977ca7b430285469c12609a7c4e29.jpg',
+                desc: 'Kamera cinema full-frame dengan kemampuan 4K 120p dan desain kompak untuk filmmaking.',
+                priceBody: 42999000,
+                priceComplete: 45999000,
+                originalPrice: 47999000
+            },
+            {
+                id: 'WH1000XM5',
+                name: 'Sony WH-1000XM5',
+                category: 'Headphone',
+                image: 'https://i.pinimg.com/736x/7a/01/e4/7a01e4ee80b74ea8dc83a1fa90fd0582.jpg',
+                desc: 'Headphone nirkabel dengan noise cancelling terbaik di kelasnya dan kualitas audio tinggi.',
+                priceBody: 4999000,
+                priceComplete: 5499000,
+                originalPrice: 5999000
+            },
+            {
+                id: 'WF1000XM5',
+                name: 'Sony WF-1000XM5',
+                category: 'Earbuds',
+                image: 'https://i.pinimg.com/736x/b8/fe/ac/b8feac0b8b2c31de83fc3cdbb4343712.jpg',
+                desc: 'Earbuds true wireless dengan noise cancelling dan kualitas audio LDAC yang luar biasa.',
+                priceBody: 3999000,
+                priceComplete: 4299000,
+                originalPrice: 4599000
+            },
+            {
+                id: 'PS5',
+                name: 'PlayStation 5',
+                category: 'Konsol Game',
+                image: 'https://i.pinimg.com/736x/95/b1/19/95b119c9d22de77df6a5457cf8bc9203.jpg',
+                desc: 'Konsol game generasi terbaru dengan performa ultra high-speed dan grafis 4K HDR.',
+                priceBody: 8999000,
+                priceComplete: 9999000,
+                originalPrice: 10999000
+            },
+            {
+                id: 'PSVR2',
+                name: 'PlayStation VR2',
+                category: 'Virtual Reality',
+                image: 'https://i.pinimg.com/736x/e6/e7/45/e6e745df0e9364cbf61d50d71a8fbdd6.jpg',
+                desc: 'Headset VR generasi berikutnya dengan teknologi eye-tracking dan feedback haptic.',
+                priceBody: 9999000,
+                priceComplete: 10999000,
+                originalPrice: 11999000
+            },
+            {
+                id: 'X95L',
+                name: 'Sony Bravia X95L',
+                category: 'TV LED',
+                image: 'https://i.pinimg.com/736x/87/fd/3e/87fd3e4529b2b217721e8f2ba0391ab3.jpg',
+                desc: 'TV LED 4K HDR dengan Cognitive Processor XR untuk gambar yang sangat realistis.',
+                priceBody: 24999000,
+                priceComplete: 25999000,
+                originalPrice: 27999000
+            },
+            {
+                id: 'A80L',
+                name: 'Sony Bravia A80L',
+                category: 'TV OLED',
+                image: 'https://i.pinimg.com/736x/f3/68/b4/f368b45dacee312b3458b4e1ad3f360d.jpg',
+                desc: 'TV OLED 4K dengan teknologi Acoustic Surface Audio+ dan processor Cognitive XR.',
+                priceBody: 32999000,
+                priceComplete: 34999000,
+                originalPrice: 36999000
+            },
+            {
+                id: 'HTA7000',
+                name: 'Sony HT-A7000',
+                category: 'Soundbar',
+                image: 'https://i.pinimg.com/736x/9c/7c/26/9c7c26a1f27eba7448e58eb79568bc56.jpg',
+                desc: 'Soundbar premium dengan Dolby Atmos, DTS:X, dan teknologi 360 Spatial Sound.',
+                priceBody: 14999000,
+                priceComplete: 15999000,
+                originalPrice: 17999000
+            },
+            {
+                id: 'ILME-FR7',
+                name: 'Sony ILME-FR7',
+                category: 'Kamera Cinema',
+                image: 'https://i.pinimg.com/736x/8e/f7/b7/8ef7b7bd4a390324ef6da80303fe4e6a.jpg',
+                desc: 'Kamera cinema E-mount dengan sensor full-frame dan PTZ (Pan-Tilt-Zoom) otomatis.',
+                priceBody: 89999000,
+                priceComplete: 94999000,
+                originalPrice: 99999000
+            },
+            {
+                id: 'Xperia1V',
+                name: 'Sony Xperia 1 V',
+                category: 'Smartphone',
+                image: 'https://i.pinimg.com/736x/78/eb/57/78eb5754367b9d7d151e5bf2c9cc443a.jpg',
+                desc: 'Smartphone flagship dengan kamera profesional, layar 4K HDR, dan performa tinggi.',
+                priceBody: 17999000,
+                priceComplete: 18999000,
+                originalPrice: 19999000
+            },
+            {
+                id: 'Xperia5V',
+                name: 'Sony Xperia 5 V',
+                category: 'Smartphone',
+                image: 'https://i.pinimg.com/736x/a3/f5/52/a3f5526eb2686120dd073923a85f3c5e.jpg',
+                desc: 'Smartphone kompak dengan kamera canggih dan layar OLED 120Hz.',
+                priceBody: 12999000,
+                priceComplete: 13999000,
+                originalPrice: 14999000
+            },
+            {
+                id: 'XperiaPro-I',
+                name: 'Sony Xperia Pro-I',
+                category: 'Smartphone',
+                image: 'https://i.pinimg.com/736x/51/3d/f1/513df1ce8121e7cbe80a078b28a456b2.jpg',
+                desc: 'Kamera  optik dan pelapis lensa dari Zeiss , layar lebar berpanel OLED refresh-rate 120Hz  dilapisi Gorilla Glass Victus',
+                priceBody: 19999000,
+                priceComplete: 22999000,
+                originalPrice: 23999000
+            },
+            {
+                id: 'Xperia10VI',
+                name: 'Sony Xperia 10 VI',
+                category: 'Smartphone',
+                image: 'https://i.pinimg.com/736x/c9/cb/e9/c9cbe9fc1f1c9f47045a6bfb3334d299.jpg',
+                desc: 'Layar OLED dengan tampilan 1,07 miliar warna, diproteksi Gorilla Glass Victus.Performa Snapdragon 6 Gen 1, peningkatan yang cukup oke dibanding Snapdragon 695, khususnya dalam pemrosesan video.',
+                priceBody: 9999000,
+                priceComplete: 10999000,
+                originalPrice: 11999000
+            }
+        ];
+
+        // Variabel global
+        let currentProduct = null;
+        let selectedPackage = 'body';
+        let selectedPackageName = 'Body Only';
+        let orderTotal = 0;
+        let customerData = {}; // Menyimpan data pelanggan dari form checkout
+
+        // Format mata uang Rupiah
+        function formatRupiah(angka) {
+            return 'Rp' + angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
+        // Inisialisasi daftar produk
+        function initializeProducts() {
+            const productGrid = document.getElementById('productGrid');
+            productGrid.innerHTML = '';
+
+            products.forEach(product => {
+                const productItem = document.createElement('div');
+                productItem.className = 'product-item';
+                productItem.onclick = () => showDetail(product.id);
+
+                productItem.innerHTML = `
+                    <img src="${product.image}" alt="${product.name}">
+                    <p><strong>${product.name}</strong></p>
+                    <p class="price">${formatRupiah(product.priceBody)}</p>
+                    <p>${product.category}</p>
+                `;
+
+                productGrid.appendChild(productItem);
+            });
+        }
+
+        // Tampilkan detail produk
+        function showDetail(productId) {
+            currentProduct = products.find(p => p.id === productId);
+
+            document.getElementById('detailTitle').textContent = currentProduct.name;
+            document.getElementById('detailImage').src = currentProduct.image;
+            document.getElementById('detailImage').alt = currentProduct.name;
+            document.getElementById('detailCategory').textContent = currentProduct.category;
+            document.getElementById('detailDesc').textContent = currentProduct.desc;
+
+            // Harga
+            document.getElementById('detailPrice').textContent = formatRupiah(currentProduct.priceBody);
+            if (currentProduct.originalPrice) {
+                document.getElementById('detailOriginalPrice').textContent = formatRupiah(currentProduct.originalPrice);
+            } else {
+                document.getElementById('detailOriginalPrice').textContent = '';
+            }
+
+            // Opsi paket
+            const packageOptions = document.getElementById('packageOptions');
+            packageOptions.innerHTML = `
+                <h3>Pilih Paket:</h3>
+                <label class="package-option ${selectedPackage === 'body' ? 'selected' : ''}" data-package-type="body">
+                    <input type="radio" name="package" value="body" ${selectedPackage === 'body' ? 'checked' : ''}
+                           onchange="updatePackageSelection('body', 'Body Only')">
+                    <strong>Body Only</strong> - ${formatRupiah(currentProduct.priceBody)}
+                </label>
+                <label class="package-option ${selectedPackage === 'complete' ? 'selected' : ''}" data-package-type="complete">
+                    <input type="radio" name="package" value="complete" ${selectedPackage === 'complete' ? 'checked' : ''}
+                           onchange="updatePackageSelection('complete', 'Paket Komplit')">
+                    <strong>Paket Komplit</strong> - ${formatRupiah(currentProduct.priceComplete)}
+                    <span class="discount">(Hemat ${formatRupiah(currentProduct.originalPrice - currentProduct.priceComplete)})</span>
+                    <br><small>Termasuk lensa kit dan aksesoris tambahan</small>
+                </label>
+            `;
+
+            document.getElementById('productList').classList.remove('active');
+            document.getElementById('productDetail').classList.add('active');
+        }
+
+        // Update pilihan paket
+        function updatePackageSelection(packageType, packageName) {
+            selectedPackage = packageType;
+            selectedPackageName = packageName;
+
+            // Update tampilan
+            const options = document.querySelectorAll('.package-option');
+            options.forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.packageType === packageType) {
+                    opt.classList.add('selected');
+                }
+            });
+
+            // Update harga yang ditampilkan
+            const price = packageType === 'body' ? currentProduct.priceBody : currentProduct.priceComplete;
+            document.getElementById('detailPrice').textContent = formatRupiah(price);
+        }
+
+        // Kembali ke daftar produk
+        function goBackToList() {
+            document.getElementById('productDetail').classList.remove('active');
+            document.getElementById('productList').classList.add('active');
+        }
+
+        // Tampilkan halaman checkout
+        function showCheckout() {
+            const price = selectedPackage === 'body' ? currentProduct.priceBody : currentProduct.priceComplete;
+            const protection = Math.round(price * 0.004); // 0.4% dari harga produk
+            const discount = selectedPackage === 'complete' ?
+                (currentProduct.originalPrice - currentProduct.priceComplete) : 0;
+            orderTotal = price + protection;
+
+            document.getElementById('checkoutProduct').textContent =
+                `${currentProduct.name} - ${selectedPackageName}`;
+            document.getElementById('checkoutPrice').textContent = formatRupiah(price);
+            document.getElementById('checkoutProtection').textContent = formatRupiah(protection);
+            document.getElementById('checkoutDiscount').textContent = formatRupiah(discount);
+            document.getElementById('checkoutTotal').textContent = formatRupiah(orderTotal);
+
+            document.getElementById('productDetail').classList.remove('active');
+            document.getElementById('checkout').classList.add('active');
+        }
+
+        // Kembali ke detail produk (dari checkout)
+        function goBackToDetail() {
+            document.getElementById('checkout').classList.remove('active');
+            document.getElementById('productDetail').classList.add('active');
+        }
+
+        // Kembali ke checkout (dari pembayaran)
+        function goBackToCheckout() {
+            document.getElementById('paymentMethod').classList.remove('active');
+            document.getElementById('checkout').classList.add('active');
+        }
+
+        // Validasi form checkout (Nama, Alamat, Email, No. WhatsApp)
+        function validateCheckoutForm() {
+            let isValid = true;
+
+            // Reset error messages
+            document.querySelectorAll('#orderForm .error').forEach(el => el.style.display = 'none');
+
+            // Validate name
+            const nameInput = document.getElementById('name');
+            const name = nameInput.value.trim();
+            if (!name) {
+                document.getElementById('name-error').style.display = 'block';
+                isValid = false;
+            }
+
+            // Validate address
+            const addressInput = document.getElementById('address');
+            const address = addressInput.value.trim();
+            if (!address) {
+                document.getElementById('address-error').style.display = 'block';
+                isValid = false;
+            }
+
+            // Validate email
+            const emailInput = document.getElementById('email');
+            const email = emailInput.value.trim();
+            if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+                document.getElementById('email-error').style.display = 'block';
+                isValid = false;
+            }
+
+            // Validate phone
+            const phoneInput = document.getElementById('phone');
+            const phone = phoneInput.value.trim();
+            if (!phone || !/^[0-9]{10,13}$/.test(phone)) {
+                document.getElementById('phone-error').style.display = 'block';
+                isValid = false;
+            }
+
+            // Jika valid, simpan data pelanggan
+            if (isValid) {
+                customerData = {
+                    name: name,
+                    address: address,
+                    email: email,
+                    phone: phone
+                };
+            }
+
+            return isValid;
+        }
+
+        // Validasi form pembayaran transfer bank
+        function validateBankTransferForm() {
+            let isValid = true;
+
+            // Reset error messages
+            document.querySelectorAll('#bankTransferForm .error').forEach(el => el.style.display = 'none');
+
+            const bankName = document.getElementById('bankName').value;
+            if (!bankName) {
+                document.getElementById('bankName-error').style.display = 'block';
+                isValid = false;
+            }
+
+            const accountNumber = document.getElementById('accountNumber').value.trim();
+            if (!accountNumber) {
+                document.getElementById('accountNumber-error').style.display = 'block';
+                isValid = false;
+            }
+
+            const accountName = document.getElementById('accountName').value.trim();
+            if (!accountName) {
+                document.getElementById('accountName-error').style.display = 'block';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // Event listener untuk submit form checkout
+        document.getElementById('orderForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Mencegah refresh halaman
+            if (validateCheckoutForm()) {
+                document.getElementById('loading').classList.add('active'); // Tampilkan spinner
+                document.getElementById('submitOrder').disabled = true; // Nonaktifkan tombol
+
+                setTimeout(() => {
+                    document.getElementById('loading').classList.remove('active'); // Sembunyikan spinner
+                    document.getElementById('checkout').classList.remove('active');
+                    document.getElementById('paymentMethod').classList.add('active');
+                    document.getElementById('submitOrder').disabled = false; // Aktifkan kembali tombol
+                    document.getElementById('transferAmount').value = formatRupiah(orderTotal);
+                }, 1500); // Simulasi waktu proses
+            }
+        });
+
+        // Event listener untuk submit form pembayaran
+        document.getElementById('paymentForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Mencegah refresh halaman
+
+            if (validateBankTransferForm()) {
+                document.getElementById('paymentLoading').classList.add('active'); // Tampilkan spinner
+                document.getElementById('submitPayment').disabled = true; // Nonaktifkan tombol
+
+                setTimeout(() => {
+                    document.getElementById('paymentLoading').classList.remove('active'); // Sembunyikan spinner
+                    document.getElementById('paymentMethod').classList.remove('active');
+                    
+                    const successBankDetails = document.getElementById('successBankDetails');
+                    successBankDetails.innerHTML = `
+                        <p>Silakan lakukan transfer ke rekening berikut:</p>
+                        <p><strong>Bank:</strong> BCA</p>
+                        <p><strong>No. Rekening:</strong> 1234567890</p>
+                        <p><strong>Atas Nama:</strong> PANG2 STORE</p>
+                        <p><strong>Jumlah:</strong> ${formatRupiah(orderTotal)}</p>
+                        <p>Pesanan Anda akan segera diproses setelah pembayaran terkonfirmasi.</p>
+                        <p><strong>Detail Pelanggan:</strong></p>
+                        <p>Nama: ${customerData.name}</p>
+                        <p>Alamat: ${customerData.address}</p>
+                        <p>Email: ${customerData.email}</p>
+                        <p>No. WhatsApp: ${customerData.phone}</p>
+                    `;
+
+                    document.getElementById('successModal').classList.add('active');
+                    document.getElementById('submitPayment').disabled = false; // Aktifkan kembali tombol
+                }, 2000); // Simulasi waktu proses pembayaran
+            }
+        });
+
+        // Tutup modal sukses dan reset ke daftar produk
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.remove('active');
+            document.getElementById('productList').classList.add('active');
+            // Reset form dan variabel jika perlu
+            document.getElementById('orderForm').reset();
+            document.getElementById('paymentForm').reset();
+            currentProduct = null;
+            selectedPackage = 'body';
+            selectedPackageName = 'Body Only';
+            orderTotal = 0;
+            customerData = {};
+            initializeProducts(); // Reinialisasi daftar produk
+        }
+
+        // Panggil saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', initializeProducts);
+    </script>
+</body>
+</html>
